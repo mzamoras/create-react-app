@@ -48,6 +48,34 @@ const paths = require('../config/paths');
 const configFactory = require('../config/webpack.config');
 const createDevServerConfig = require('../config/webpackDevServer.config');
 
+const loadCustom = (fileName, params = null) => {
+  if (!paths.customScripts || !paths.customScripts[fileName] || !fileName) {
+    return null;
+  }
+  const filePath = paths.customScripts[fileName];
+  try {
+    const loadedFile = require(filePath);
+    loadedFile(params);
+  } catch (e) {
+    console.log();
+    console.log(chalk.yellow(`CUSTOM CONFIGURATION ERROR`));
+    console.log(
+      chalk.yellow(`The file ${chalk.bold(filePath)} does not exist.`)
+    );
+    console.log();
+    console.log();
+    console.log(
+      chalk.bold(`- review your ${chalk.bold.red('package.json')} file.`)
+    );
+    console.log();
+    console.log();
+
+    process.exit(1);
+  }
+};
+
+loadCustom('preStartScript');
+
 const useYarn = fs.existsSync(paths.yarnLockFile);
 const isInteractive = process.stdout.isTTY;
 
@@ -102,10 +130,11 @@ checkBrowsers(paths.appPath, isInteractive)
       errors: errors =>
         devServer.sockWrite(devServer.sockets, 'errors', errors),
     };
+    const innerConfig = loadCustom('webpackConfig', config);
     // Create a webpack compiler that is configured with custom messages.
     const compiler = createCompiler({
       appName,
-      config,
+      config: innerConfig || config,
       devSocket,
       urls,
       useYarn,
@@ -128,6 +157,7 @@ checkBrowsers(paths.appPath, isInteractive)
       }
       if (isInteractive) {
         clearConsole();
+        loadCustom('postStartScript');
       }
 
       // We used to support resolving modules according to `NODE_PATH`.

@@ -17,6 +17,18 @@ const url = require('url');
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
+// Method to load custom configuration from the client package.json
+const resolveOwnConfig = () => {
+  const pJsonVars = require(resolveApp('package.json')).craConfig || {};
+  const configs = {};
+  Object.keys(pJsonVars).forEach(key => {
+    if (pJsonVars[key]) {
+      configs[key] = resolveApp(pJsonVars[key]);
+    }
+  });
+  return configs;
+};
+
 const envPublicUrl = process.env.PUBLIC_URL;
 
 function ensureSlash(inputPath, needsSlash) {
@@ -119,6 +131,9 @@ module.exports = {
   ownNodeModules: resolveOwn('node_modules'), // This is empty on npm 3
   appTypeDeclarations: resolveApp('src/react-app-env.d.ts'),
   ownTypeDeclarations: resolveOwn('lib/react-app.d.ts'),
+
+  //These properties are to create a custom configuration
+  customScripts: resolveOwnConfig(),
 };
 
 const ownPackageJson = require('../package.json');
@@ -154,6 +169,9 @@ if (
     ownNodeModules: resolveOwn('node_modules'),
     appTypeDeclarations: resolveOwn('template/src/react-app-env.d.ts'),
     ownTypeDeclarations: resolveOwn('lib/react-app.d.ts'),
+
+    //These properties are to create a custom configuration
+    customScripts: resolveOwnConfig(),
   };
 }
 // @remove-on-eject-end
