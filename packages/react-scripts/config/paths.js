@@ -11,23 +11,12 @@
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const customConfig = require('../config/customConfig');
 
 // Make sure any symlinks in the project folder are resolved:
 // https://github.com/facebook/create-react-app/issues/637
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
-
-// Method to load custom configuration from the client package.json
-const resolveOwnConfig = () => {
-  const pJsonVars = require(resolveApp('package.json')).craConfig || {};
-  const configs = {};
-  Object.keys(pJsonVars).forEach(key => {
-    if (pJsonVars[key]) {
-      configs[key] = resolveApp(pJsonVars[key]);
-    }
-  });
-  return configs;
-};
 
 const envPublicUrl = process.env.PUBLIC_URL;
 
@@ -109,7 +98,7 @@ module.exports = {
 const resolveOwn = relativePath => path.resolve(__dirname, '..', relativePath);
 
 // config before eject: we're in ./node_modules/react-scripts/config/
-module.exports = {
+module.exports = customConfig.customizedPaths({
   dotenv: resolveApp('.env'),
   appPath: resolveApp('.'),
   appBuild: resolveApp('build'),
@@ -131,10 +120,7 @@ module.exports = {
   ownNodeModules: resolveOwn('node_modules'), // This is empty on npm 3
   appTypeDeclarations: resolveApp('src/react-app-env.d.ts'),
   ownTypeDeclarations: resolveOwn('lib/react-app.d.ts'),
-
-  //These properties are to create a custom configuration
-  customScripts: resolveOwnConfig(),
-};
+});
 
 const ownPackageJson = require('../package.json');
 const reactScriptsPath = resolveApp(`node_modules/${ownPackageJson.name}`);
@@ -147,7 +133,7 @@ if (
   !reactScriptsLinked &&
   __dirname.indexOf(path.join('packages', 'react-scripts', 'config')) !== -1
 ) {
-  module.exports = {
+  module.exports = customConfig.customizedPaths({
     dotenv: resolveOwn('template/.env'),
     appPath: resolveApp('.'),
     appBuild: resolveOwn('../../build'),
@@ -169,10 +155,7 @@ if (
     ownNodeModules: resolveOwn('node_modules'),
     appTypeDeclarations: resolveOwn('template/src/react-app-env.d.ts'),
     ownTypeDeclarations: resolveOwn('lib/react-app.d.ts'),
-
-    //These properties are to create a custom configuration
-    customScripts: resolveOwnConfig(),
-  };
+  });
 }
 // @remove-on-eject-end
 
